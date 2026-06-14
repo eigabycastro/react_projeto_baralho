@@ -1,9 +1,9 @@
 .app {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   overflow: hidden;
   background: #ffffff;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
 }
 
 .main-content {

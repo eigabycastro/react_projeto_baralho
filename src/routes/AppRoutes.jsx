@@ -3,6 +3,7 @@ import Home from '../pages/Home';
 import DeckPage from '../pages/DeckPage';
 import CardDetails from '../pages/CardDetails';
 import NotFound from '../pages/NotFound';
+import TrucoPage from '../pages/TrucoPage/TrucoPage';
 
 function AppRoutes() {
   return (
@@ -10,6 +11,7 @@ function AppRoutes() {
       <Route path="/" element={<Home />} />
       <Route path="/deck" element={<DeckPage />} />
       <Route path="/card/:code" element={<CardDetails />} />
+      <Route path="/truco" element={<TrucoPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
