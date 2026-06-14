@@ -39,7 +39,7 @@ function DeckPage() {
           sessionStorage.removeItem('drawnCards');
           setSuccess('Baralho criado com sucesso.');
         }
-
+        
         if (action.type === 'draw') {
           const data = await drawCards(action.deckId, 5, controller.signal);
           if (cancelled) return;
@@ -52,7 +52,7 @@ function DeckPage() {
           setRemaining(data.remaining);
           setSuccess('Cartas compradas com sucesso.');
         }
-
+        
         if (action.type === 'shuffle') {
           const data = await shuffleDeck(action.deckId, controller.signal);
           if (cancelled) return;
@@ -105,7 +105,7 @@ function DeckPage() {
 
       <div className="deck-panel">
         <div className="deck-actions">
-          <Button onClick={() => setAction({ type: 'create' })} disabled={loading}>
+          <Button onClick={() => setAction({ type: 'create' })} disabled={loading || hasDeck}>
             Criar baralho
           </Button>
           <Button
@@ -125,7 +125,6 @@ function DeckPage() {
         </div>
 
         <div className="deck-info">
-          <span>Deck ID: {deckId || 'nenhum'}</span>
           <span>Restantes: {remaining}</span>
           <span>Compradas: {cards.length}</span>
         </div>

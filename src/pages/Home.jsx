@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import Button from '../components/Button';
 import deckManagerLarge from '../assets/DeckManagerGG.png';
-import deckManagerSmall from '../assets/DeckManagerpp.png';
+import deckIcon from '../assets/deck-icon.png';
+import drawCardIcon from '../assets/draw-icon.png';
 
 function Home() {
   return (
@@ -30,12 +31,12 @@ function Home() {
 
       <div className="home-info">
         <div className="feature-card">
-          <img src={deckManagerSmall} alt="" />
+          <img src={deckIcon} alt="Ícone de baralho" />
           <h2>Crie seu baralho</h2>
-          <p>Gere um novo baralho embaralhado usando dados reais da API.</p>
+          <p>Gere um novo baralho.</p>
         </div>
         <div className="feature-card">
-          <span className="feature-icon">5</span>
+          <img src={drawCardIcon} alt="Ícone de comprar carta " />
           <h2>Compre cartas</h2>
           <p>Compre cartas do baralho e visualize suas cartas compradas.</p>
         </div>
@@ -46,9 +47,6 @@ function Home() {
         </div>
       </div>
 
-      <div className="home-note">
-        Projeto academico feito com <strong>React, Vite e Deck of Cards API.</strong>
-      </div>
     </section>
   );
 }
