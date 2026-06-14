@@ -39,7 +39,7 @@ function DeckPage() {
           sessionStorage.removeItem('drawnCards');
           setSuccess('Baralho criado com sucesso.');
         }
-        
+
         if (action.type === 'draw') {
           const data = await drawCards(action.deckId, 5, controller.signal);
           if (cancelled) return;
@@ -52,15 +52,12 @@ function DeckPage() {
           setRemaining(data.remaining);
           setSuccess('Cartas compradas com sucesso.');
         }
-        
+
         if (action.type === 'shuffle') {
-          const data = await shuffleDeck(action.deckId, controller.signal);
-          if (cancelled) return;
-          setCards([]);
-          setSearch('');
-          setRemaining(data.remaining);
-          sessionStorage.removeItem('drawnCards');
-          setSuccess('Baralho embaralhado com sucesso.');
+          const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+          setCards(shuffledCards);
+          sessionStorage.setItem('drawnCards', JSON.stringify(shuffledCards));
+          setSuccess('Cartas embaralhadas com sucesso.');
         }
       } catch (apiError) {
         if (!cancelled && apiError.name !== 'AbortError') {
@@ -145,12 +142,6 @@ function DeckPage() {
         </div>
       )}
 
-      {hasDeck && (
-        <div className="tip-panel">
-          <strong>Dica</strong>
-          <p>Clique em qualquer carta acima para ver os detalhes completos.</p>
-        </div>
-      )}
     </section>
   );
 }
