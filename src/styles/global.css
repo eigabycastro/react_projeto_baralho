@@ -1,13 +1,9 @@
 .app {
-  width: min(1180px, calc(100% - 32px));
-  min-height: calc(100vh - 32px);
-  margin: 16px auto;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   overflow: hidden;
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
 }
 
 .main-content {
@@ -201,21 +197,15 @@ p {
 
 .feature-card img,
 .feature-icon {
-  width: 68px;
-  height: 68px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: #fff0f1;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  border-radius: 20%;
   color: #e72f35;
   object-fit: contain;
   font-size: 24px;
   font-weight: 800;
-}
-
-.feature-card:nth-child(2) .feature-icon {
-  color: #071832;
-  background: #eef3fa;
+  background-color: rgba(66, 66, 66, 0.034);
 }
 
 .feature-card h2 {

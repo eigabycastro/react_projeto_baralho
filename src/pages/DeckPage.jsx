@@ -54,13 +54,10 @@ function DeckPage() {
         }
 
         if (action.type === 'shuffle') {
-          const data = await shuffleDeck(action.deckId, controller.signal);
-          if (cancelled) return;
-          setCards([]);
-          setSearch('');
-          setRemaining(data.remaining);
-          sessionStorage.removeItem('drawnCards');
-          setSuccess('Baralho embaralhado com sucesso.');
+          const shuffledCards = [...cards].sort(() => Math.random() - 0.5);
+          setCards(shuffledCards);
+          sessionStorage.setItem('drawnCards', JSON.stringify(shuffledCards));
+          setSuccess('Cartas embaralhadas com sucesso.');
         }
       } catch (apiError) {
         if (!cancelled && apiError.name !== 'AbortError') {
@@ -105,7 +102,7 @@ function DeckPage() {
 
       <div className="deck-panel">
         <div className="deck-actions">
-          <Button onClick={() => setAction({ type: 'create' })} disabled={loading}>
+          <Button onClick={() => setAction({ type: 'create' })} disabled={loading || hasDeck}>
             Criar baralho
           </Button>
           <Button
@@ -125,7 +122,6 @@ function DeckPage() {
         </div>
 
         <div className="deck-info">
-          <span>Deck ID: {deckId || 'nenhum'}</span>
           <span>Restantes: {remaining}</span>
           <span>Compradas: {cards.length}</span>
         </div>
@@ -146,12 +142,6 @@ function DeckPage() {
         </div>
       )}
 
-      {hasDeck && (
-        <div className="tip-panel">
-          <strong>Dica</strong>
-          <p>Clique em qualquer carta acima para ver os detalhes completos.</p>
-        </div>
-      )}
     </section>
   );
 }

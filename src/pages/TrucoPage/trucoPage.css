@@ -1,0 +1,17 @@
+.truco-section{
+    background-color:rgba(255, 0, 0, 0.068);
+    margin: 80px auto;
+    width: 60%;
+    height: 160px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+
+    img {
+        width: 100px;
+    }
+}
+
+#section-enemy{
+    
+}
