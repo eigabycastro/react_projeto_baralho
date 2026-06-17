@@ -15,3 +15,8 @@
 #section-enemy{
     
 }
+
+.cards-container{
+    display: flex;
+    flex-direction: row;
+}
