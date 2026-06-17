@@ -21,3 +21,8 @@ export function drawCards(deckId, count = 5, signal) {
 export function shuffleDeck(deckId, signal) {
   return requestJson(`${BASE_URL}/${deckId}/shuffle/`, signal);
 }
+
+export function returnCards(deckId, cards = [], signal) {
+  const cardCodes = cards.join(',');
+  return requestJson(`${BASE_URL}/${deckId}/draw/?cards=${cardCodes}`, signal);
+}
