@@ -43,16 +43,15 @@ Para o Truco, é utilizado um baralho parcial com 40 cartas, sem coringas e sem 
 
 ### Jogo de Truco Paulista
 
-- Distribuição de três cartas para o jogador e três para a IA;
+- Distribuição de três cartas para o jogador e três para o oponente;
 - Definição da vira e cálculo automático da manilha;
 - Ordem correta das cartas e das manilhas por naipe;
 - Comparação das cartas jogadas;
-- Tratamento de empate, conhecido como "cangou";
+- Tratamento de empate;
 - Disputa em melhor de três rodadas;
 - Pontuação acumulada até 12 pontos;
 - Pedidos de Truco, Seis, Nove e Doze;
 - Opções de aceitar ou correr;
-- IA simples para jogar cartas e responder aos pedidos de aumento;
 - Nova distribuição somente após o encerramento da mão.
 
 ## Tecnologias utilizadas
@@ -119,7 +118,7 @@ Após abrir o sistema, será possível:
 - Comprar cartas;
 - Visualizar os detalhes das cartas;
 - Pesquisar entre as cartas compradas;
-- Jogar uma partida completa de Truco Paulista contra a IA.
+- Jogar uma partida completa de Truco Paulista contra a Maquina.
 
 ## Scripts disponíveis
 

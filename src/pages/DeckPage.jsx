@@ -5,7 +5,7 @@ import ErrorMessage from '../components/ErrorMessage';
 import Loading from '../components/Loading';
 import SearchBar from '../components/SearchBar';
 import { mapCards } from '../mappers/cardMapper';
-import { createDeck, drawCards, shuffleDeck } from '../services/deckService';
+import { createDeck, drawCards } from '../services/deckService';
 
 function DeckPage() {
   const [deckId, setDeckId] = useState('');

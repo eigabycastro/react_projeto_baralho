@@ -14,19 +14,6 @@ import {
 import './trucoPage.css';
 
 const CARD_BACK = 'https://deckofcardsapi.com/static/img/back.png';
-const RAISE_VALUES = [3, 6, 9, 12];
-const RANK_NAMES = {
-  4: '4',
-  5: '5',
-  6: '6',
-  7: '7',
-  Q: 'Rainha',
-  J: 'Valete',
-  K: 'Rei',
-  A: 'Ás',
-  2: '2',
-  3: '3',
-};
 
 const cardStyle = {
   width: 'clamp(82px, 10vw, 126px)',
@@ -35,10 +22,6 @@ const cardStyle = {
   filter: 'drop-shadow(0 10px 12px rgba(15, 27, 47, 0.2))',
 };
 
-function randomFraction() {
-  return Math.random();
-}
-
 function TrucoPage() {
   const [playerCards, setPlayerCards] = useState([]);
   const [aiCards, setAiCards] = useState([]);
@@ -46,12 +29,9 @@ function TrucoPage() {
   const [manilha, setManilha] = useState('');
   const [table, setTable] = useState({ player: null, ai: null });
   const [roundResults, setRoundResults] = useState([]);
-  const [playerScore, setPlayerScore] = useState(0);
-  const [aiScore, setAiScore] = useState(0);
-  const [handValue, setHandValue] = useState(1);
   const [status, setStatus] = useState('dealing');
   const [message, setMessage] = useState('Preparando a mesa...');
-  const [pendingRaise, setPendingRaise] = useState(null);
+  const [lastHandWinner, setLastHandWinner] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const controllerRef = useRef(null);
@@ -67,7 +47,7 @@ function TrucoPage() {
     timersRef.current.push(timer);
   }, []);
 
-  const startHand = useCallback(async ({ resetMatch = false, initial = false } = {}) => {
+  const startHand = useCallback(async ({ initial = false } = {}) => {
     clearTimers();
     controllerRef.current?.abort();
 
@@ -78,6 +58,7 @@ function TrucoPage() {
     setError('');
     setStatus('dealing');
     setMessage('Distribuindo uma nova mão...');
+    setLastHandWinner(null);
     setPlayerCards([]);
     setAiCards([]);
     setVira(null);
@@ -92,21 +73,14 @@ function TrucoPage() {
         throw new Error('A API não devolveu as sete cartas da mão.');
       }
 
-      const newVira = cards[6];
-      setPlayerCards(cards.slice(0, 3));
-      setAiCards(cards.slice(3, 6));
+      const newVira = cards[6]; 
+      setPlayerCards(cards.slice(0, 3)); 
+      setAiCards(cards.slice(3, 6)); 
       setVira(newVira);
       setManilha(calculateManilha(newVira));
       setRoundResults([]);
-      setHandValue(1);
-      setPendingRaise(null);
       setStatus('player');
       setMessage('Sua vez: escolha uma carta.');
-
-      if (resetMatch) {
-        setPlayerScore(0);
-        setAiScore(0);
-      }
     } catch (apiError) {
       if (apiError.name !== 'AbortError') {
         setError(apiError.message || 'Não foi possível iniciar o Truco.');
@@ -119,7 +93,7 @@ function TrucoPage() {
 
   useEffect(() => {
     const initialTimer = setTimeout(() => {
-      startHand({ resetMatch: true, initial: true });
+      startHand({ initial: true });
     }, 0);
 
     return () => {
@@ -129,75 +103,46 @@ function TrucoPage() {
     };
   }, [clearTimers, startHand]);
 
-  function finishHand(winner, points = handValue) {
-    const nextPlayerScore = playerScore + (winner === 'player' ? points : 0);
-    const nextAiScore = aiScore + (winner === 'ai' ? points : 0);
-    setPlayerScore(nextPlayerScore);
-    setAiScore(nextAiScore);
-    setPendingRaise(null);
-
-    if (nextPlayerScore >= 12 || nextAiScore >= 12) {
-      setStatus('gameOver');
-      setMessage(winner === 'player' ? 'Você venceu a partida!' : 'A IA venceu a partida.');
-      return;
-    }
-
+  function finishHand(winner) {
+    setLastHandWinner(winner);
     setStatus('handOver');
     setMessage(winner === 'tie'
-      ? 'A mão cangou. Ninguém marcou pontos.'
-      : `${winner === 'player' ? 'Você' : 'A IA'} venceu a mão e marcou ${points} ponto${points > 1 ? 's' : ''}.`);
-    schedule(() => startHand(), 1800);
+      ? 'A mão empatou. Nova mão em seguida.'
+      : `${winner === 'player' ? 'Você' : 'O oponente'} venceu a mão.`);
   }
 
-  function resolveRound(playerCard, aiCard, currentHandValue = handValue) {
+  function resolveRound(playerCard, aiCard) {
     const roundWinner = determineRoundWinner(playerCard, aiCard, manilha);
     const updatedResults = [...roundResults, roundWinner];
     const handWinner = determineHandWinner(updatedResults);
     setRoundResults(updatedResults);
     setStatus('resolving');
     setMessage(roundWinner === 'tie'
-      ? 'Cangou! As cartas têm a mesma força.'
-      : `${roundWinner === 'player' ? 'Você' : 'A IA'} venceu a rodada.`);
+      ? 'Empate!'
+      : `${roundWinner === 'player' ? 'Você' : 'O oponente'} venceu a rodada.`);
 
     schedule(() => {
       if (handWinner) {
-        finishHand(handWinner, currentHandValue);
+        finishHand(handWinner);
         return;
       }
 
       setTable({ player: null, ai: null });
       setStatus('player');
       setMessage('Sua vez: escolha uma carta.');
-    }, 1200);
+    }, 3000);
   }
 
-  function playAiCard(playerCard, availableCards = aiCards, currentHandValue = handValue) {
+  function playAiCard(playerCard, availableCards = aiCards) {
     if (!playerCard || !availableCards.length) return;
 
-    const index = Math.floor(randomFraction() * availableCards.length);
+    const index = Math.floor(Math.random() * availableCards.length);
     const aiCard = availableCards[index];
     setAiCards(availableCards.filter((_, cardIndex) => cardIndex !== index));
     setTable({ player: playerCard, ai: aiCard });
     setStatus('resolving');
-    setMessage('A IA jogou. Comparando as cartas...');
-    schedule(() => resolveRound(playerCard, aiCard, currentHandValue), 700);
-  }
-
-  function aiMayRaise(playerCard, availableCards) {
-    const strongestCard = Math.max(
-      ...availableCards.map((card) => getCardStrength(card, manilha)),
-    );
-    const shouldRaise = handValue < 12 && strongestCard >= 9 && randomFraction() < 0.32;
-
-    if (!shouldRaise) {
-      playAiCard(playerCard, availableCards, handValue);
-      return;
-    }
-
-    const requestedValue = RAISE_VALUES.find((value) => value > handValue);
-    setPendingRaise({ requestedValue, playerCard, availableCards });
-    setStatus('responding');
-    setMessage(`A IA pediu ${requestedValue === 3 ? 'TRUCO' : requestedValue}! Você aceita?`);
+    setMessage('O oponente jogou. Comparando as cartas...');
+    schedule(() => resolveRound(playerCard, aiCard), 700);
   }
 
   function playPlayerCard(card) {
@@ -208,55 +153,17 @@ function TrucoPage() {
     setPlayerCards(remainingPlayerCards);
     setTable({ player: card, ai: null });
     setStatus('ai');
-    setMessage('A IA está pensando...');
-    schedule(() => aiMayRaise(card, currentAiCards), 650);
+    setMessage('O oponente está pensando...');
+    schedule(() => playAiCard(card, currentAiCards), 650);
   }
 
-  function requestRaise() {
-    const requestedValue = RAISE_VALUES.find((value) => value > handValue);
-    if (!requestedValue || status !== 'player') return;
-
-    const strongestCard = Math.max(
-      ...aiCards.map((card) => getCardStrength(card, manilha)),
-    );
-    const threshold = { 3: 6, 6: 8, 9: 10, 12: 12 }[requestedValue];
-    const accepts = strongestCard >= threshold || randomFraction() < 0.22;
-    setStatus('resolving');
-    setMessage(`Você pediu ${requestedValue === 3 ? 'TRUCO' : requestedValue}!`);
-
-    schedule(() => {
-      if (accepts) {
-        setHandValue(requestedValue);
-        setStatus('player');
-        setMessage(`A IA aceitou. A mão agora vale ${requestedValue} pontos.`);
-      } else {
-        setMessage('A IA correu!');
-        finishHand('player', handValue);
-      }
-    }, 700);
+  function getDotStyle(result) {
+    const base = { width: 14, height: 14, borderRadius: '50%', display: 'inline-block' };
+    if (result === 'player') return { ...base, background: '#28a745' }; // verde
+    if (result === 'ai') return { ...base, background: '#dc3545' }; // vermelho
+    if (result === 'tie') return { ...base, background: '#ffffff', border: '1px solid #ccc' }; // branco
+    return { ...base, background: '#e9ecef' }; // não jogado
   }
-
-  function acceptAiRaise() {
-    if (!pendingRaise) return;
-
-    const { requestedValue, playerCard, availableCards } = pendingRaise;
-    setHandValue(requestedValue);
-    setPendingRaise(null);
-    setStatus('ai');
-    setMessage(`Você aceitou. A mão vale ${requestedValue} pontos.`);
-    schedule(() => playAiCard(playerCard, availableCards, requestedValue), 500);
-  }
-
-  function runFromAiRaise() {
-    if (!pendingRaise) return;
-
-    setPendingRaise(null);
-    setMessage('Você correu da mão.');
-    finishHand('ai', handValue);
-  }
-
-  const nextRaise = RAISE_VALUES.find((value) => value > handValue);
-  const roundNumber = Math.min(roundResults.length + 1, 3);
 
   if (loading) {
     return (
@@ -271,65 +178,27 @@ function TrucoPage() {
       <div className="page-title">
         <p className="eyebrow">Truco Paulista</p>
         <h1>Mesa de Truco</h1>
-        <p>Primeiro a alcançar 12 pontos vence a partida.</p>
       </div>
 
       <ErrorMessage message={error} />
       {error && (
-        <Button onClick={() => startHand({ resetMatch: true, initial: true })}>
+        <Button onClick={() => startHand({ initial: true })}>
           Tentar novamente
         </Button>
       )}
 
       {!error && (
         <>
-          <div className="deck-panel">
-            <div className="deck-info" aria-label="Placar e informações da mão">
-              <span>Você: {playerScore}</span>
-              <span>IA: {aiScore}</span>
-              <span>Rodada: {roundNumber}/3</span>
-              <span>Valor da mão: {handValue}</span>
-              <span>Manilha: {RANK_NAMES[manilha] || '-'}</span>
-            </div>
-
-            <p
-              className={status === 'gameOver' ? 'success-message' : 'tip-panel'}
-              aria-live="polite"
-            >
-              {message}
-            </p>
-
-            <div className="deck-actions">
-              {nextRaise && (
-                <Button variant="secondary" onClick={requestRaise} disabled={status !== 'player'}>
-                  Pedir {nextRaise === 3 ? 'Truco' : nextRaise}
-                </Button>
-              )}
-
-              {pendingRaise && (
-                <>
-                  <Button onClick={acceptAiRaise}>Aceitar</Button>
-                  <Button variant="outline" onClick={runFromAiRaise}>Correr</Button>
-                </>
-              )}
-
-              {status === 'gameOver' && (
-                <Button onClick={() => startHand({ resetMatch: true, initial: true })}>
-                  Nova partida
-                </Button>
-              )}
-            </div>
-          </div>
 
           <div className="cards-panel">
             <div>
-              <p className="eyebrow">Mão da IA</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              <p className="eyebrow">Mão do oponente</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
                 {aiCards.map((card) => (
                   <img
                     key={card.code}
                     src={CARD_BACK}
-                    alt="Carta fechada da IA"
+                    alt="Carta fechada do oponente"
                     style={cardStyle}
                   />
                 ))}
@@ -345,7 +214,7 @@ function TrucoPage() {
               }}
             >
               <div>
-                <strong>IA na mesa</strong>
+                <strong>O oponente na mesa</strong>
                 <div>
                   {table.ai
                     ? <img src={table.ai.image} alt={`${table.ai.value} de ${table.ai.suit}`} style={cardStyle} />
@@ -354,8 +223,7 @@ function TrucoPage() {
               </div>
 
               <div>
-                <strong>Vira</strong>
-                <div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
                   {vira && (
                     <img
                       src={vira.image}
@@ -377,16 +245,20 @@ function TrucoPage() {
             </div>
 
             <div className="deck-info" aria-label="Resultados das rodadas">
-              {[0, 1, 2].map((index) => (
-                <span key={index}>
-                  R{index + 1}: {{ player: 'Você', ai: 'IA', tie: 'Cangou' }[roundResults[index]] || '-'}
-                </span>
-              ))}
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', alignItems: 'center' }}>
+                {[0, 1, 2].map((index) => (
+                  <span
+                    key={index}
+                    style={getDotStyle(roundResults[index])}
+                    aria-label={roundResults[index] || 'não jogado'}
+                  />
+                ))}
+              </div>
             </div>
 
             <div>
               <p className="eyebrow">Suas cartas</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, justifyContent: 'center' }}>
                 {playerCards.map((card) => (
                   <button
                     key={card.code}
@@ -407,6 +279,49 @@ function TrucoPage() {
               </div>
             </div>
           </div>
+
+          {status === 'handOver' && (
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                background: 'rgba(5, 10, 20, 0.72)',
+                display: 'grid',
+                placeItems: 'center',
+                padding: 24,
+                zIndex: 50,
+              }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Fim da rodada"
+            >
+              <div
+                style={{
+                  width: 'min(92vw, 420px)',
+                  borderRadius: 24,
+                  background: 'rgba(13, 20, 33, 0.98)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: '0 24px 80px rgba(0, 0, 0, 0.45)',
+                  padding: 24,
+                  textAlign: 'center',
+                  display: 'grid',
+                  gap: 18,
+                }}
+              >
+                <img
+                  src={lastHandWinner === 'player'
+                    ? new URL('../../assets/gato-joia.png', import.meta.url).href
+                    : new URL('../../assets/to-frito.jpg', import.meta.url).href}
+                  alt={lastHandWinner === 'player' ? 'Você ganhou' : 'Você perdeu'}
+                  style={{ width: '100%', maxHeight: 220, objectFit: 'contain', borderRadius: 16 }}
+                />
+
+                <Button onClick={() => window.location.reload()}>
+                  Mais uma rodada?
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       )}
     </section>

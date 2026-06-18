@@ -18,14 +18,7 @@ export function drawCards(deckId, count = 5, signal) {
   return requestJson(`${BASE_URL}/${deckId}/draw/?count=${count}`, signal);
 }
 
-export function shuffleDeck(deckId, signal) {
-  return requestJson(`${BASE_URL}/${deckId}/shuffle/`, signal);
-}
-
-export function returnCards(deckId, cards = [], signal) {
-  const cardCodes = cards.join(',');
-  return requestJson(`${BASE_URL}/${deckId}/draw/?cards=${cardCodes}`, signal);
-}
+// METODOS PRO TRUCO
 
 const TRUCO_RANKS = ['4', '5', '6', '7', 'Q', 'J', 'K', 'A', '2', '3'];
 const TRUCO_SUITS = ['S', 'D', 'C', 'H'];
@@ -39,15 +32,18 @@ function getCardRank(card) {
 export function createTrucoDeck(signal) {
   const cards = TRUCO_RANKS.flatMap((rank) =>
     TRUCO_SUITS.map((suit) => `${rank}${suit}`),
-  ).join(',');
+  ).join(','); // Gera a string "4S,4D,4C,4H,5S,5D,..."
 
-  return requestJson(`${BASE_URL}/new/shuffle/?cards=${cards}`, signal);
+  // Request para criar um novo deck contendo apenas as cartas do Truco
+  return requestJson(`${BASE_URL}/new/shuffle/?cards=${cards}`, signal); 
 }
 
+// Request para comprar as 7 cartas necessárias 
 export function dealTrucoCards(deckId, signal) {
   return drawCards(deckId, 7, signal);
 }
 
+// Calcula a manilha com base na carta vira e retorna o valor correspondente
 export function calculateManilha(vira) {
   const viraRank = getCardRank(vira);
   const viraIndex = TRUCO_RANKS.indexOf(viraRank);
@@ -56,6 +52,7 @@ export function calculateManilha(vira) {
   return TRUCO_RANKS[(viraIndex + 1) % TRUCO_RANKS.length];
 }
 
+// Retorna a força de uma carta com base em sua classificação e na manilha
 export function getCardStrength(card, manilha) {
   const rank = getCardRank(card);
   const suit = card?.code?.slice(-1) || '';
@@ -96,8 +93,4 @@ export function determineHandWinner(roundResults = []) {
   if (third === 'tie') return first !== 'tie' ? first : second;
   if (first === third || second === third) return third;
   return first;
-}
-
-export function createDeckWithTrucoCards(signal) {
-  return createTrucoDeck(signal);
 }
